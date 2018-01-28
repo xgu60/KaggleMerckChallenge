@@ -11,24 +11,68 @@ class DNN(nn.Module):
 	def __init__(self, n_features, n_output):
 		super(DNN, self).__init__()
 		self.h1 = nn.Linear(n_features, 2000)
-		self.h1_dropout = nn.Dropout(p=0.25)
-		self.h2 = nn.Linear(2000, 2000)
+		nn.init.xavier_uniform(self.h1.weight)
+		self.h1_bn = nn.BatchNorm1d(2000)
+		self.h1_relu = nn.ReLU()
+		self.h1_dropout = nn.Dropout(p=0.5)
+		self.h2 = nn.Linear(2000, 1000)
+		nn.init.xavier_uniform(self.h2.weight)
+		self.h2_bn = nn.BatchNorm1d(1000)
+		self.h2_relu = nn.ReLU()
 		self.h2_dropout = nn.Dropout(p=0.25)
-		#self.h3 = nn.Linear(1000, 1000)
-		#self.h3_dropout = nn.Dropout(p=0.25)
-		self.output = nn.Linear(2000, n_output)
+		self.h3 = nn.Linear(1000, 1000)
+		nn.init.xavier_uniform(self.h3.weight)
+		self.h3_bn = nn.BatchNorm1d(1000)
+		self.h3_relu = nn.ReLU()
+		self.h3_dropout = nn.Dropout(p=0.25)		
+		self.output = nn.Linear(1000, n_output)
 
 	def forward(self, x):
-		x = F.relu(self.h1(x))
+		x = self.h1(x)
+		x = self.h1_bn(x)
+		x = self.h1_relu(x)
 		x = self.h1_dropout(x)
-		x = F.relu(self.h2(x))
+		x = self.h2(x)
+		x = self.h2_bn(x)
+		x = self.h2_relu(x)
 		x = self.h2_dropout(x)
-		#x = F.relu(self.h3(x))
-		#x = self.h3_dropout(x)
+		x = self.h3(x)
+		x = self.h3_bn(x)
+		x = self.h3_relu(x)
+		x = self.h3_dropout(x)		
 		return self.output(x)
 
+class DNN_simple(nn.Module):
+	''' a simple dnn
+	arguments: n_features e.g 1000
+	           n_output e.g 1
+	'''
+
+	def __init__(self, n_features, n_output):
+		super(DNN_simple, self).__init__()
+		self.h1 = nn.Linear(n_features, 2000)
+		nn.init.xavier_uniform(self.h1.weight)				
+		self.h1_relu = nn.ReLU()		
+		self.h2 = nn.Linear(2000, 1000)
+		nn.init.xavier_uniform(self.h2.weight)				
+		self.h2_relu = nn.ReLU()		
+		self.h3 = nn.Linear(1000, 1000)	
+		nn.init.xavier_uniform(self.h3.weight)			
+		self.h3_relu = nn.ReLU()			
+		self.output = nn.Linear(1000, n_output)
+
+	def forward(self, x):
+		x = self.h1(x)		
+		x = self.h1_relu(x)		
+		x = self.h2(x)		
+		x = self.h2_relu(x)		
+		x = self.h3(x)		
+		x = self.h3_relu(x)				
+		return self.output(x)
 
 if __name__ == "__main__":
 	net = DNN(777, 10)
+	net2 = DNN_simple(777, 10)
 	print(net)
+	print(net2)
 

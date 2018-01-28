@@ -8,10 +8,10 @@ class MerckChallengeDataset(Dataset):
 	   Argument: CSV file name
 	'''
 	def __init__(self, csv_path):
-		xy = pd.read_csv(csv_path)
-		self.len = xy.shape[0]
-		self.x_data = torch.from_numpy(xy.ix[:, 2:].as_matrix()).float()
-		self.y_data = torch.from_numpy(xy.ix[:, 1].as_matrix()).float().view(xy.shape[0], 1)
+		xy = pd.read_csv(csv_path)		
+		self.len = int(xy.shape[0] * 0.7)		
+		self.x_data = torch.from_numpy(xy.ix[: self.len - 1, 2:].as_matrix()).float()
+		self.y_data = torch.from_numpy(xy.ix[: self.len - 1, 1].as_matrix()).float().view(self.len, 1)
 
 	def __getitem__(self, index):
 		return self.x_data[index], self.y_data[index]
@@ -19,14 +19,20 @@ class MerckChallengeDataset(Dataset):
 	def __len__(self):
 		return self.len
 
+def getTestData(csv_path):
+	xy = pd.read_csv(csv_path)
+	st = int(xy.shape[0] * 0.7)
+	rows = xy.shape[0] - st
+	x_data = torch.from_numpy(xy.ix[st:, 2:].as_matrix()).float()
+	y_data = torch.from_numpy(xy.ix[st:, 1].as_matrix()).float().view(rows, 1)
+	return x_data, y_data
+
 
 if __name__ == "__main__":
-	xy = pd.read_csv("ACT7_competition_training.csv")
-	y_data = torch.from_numpy(xy.ix[:, 1].as_matrix()).float().view(xy.shape[0], 1)
-
-	print(y_data)
-	print(y_data.shape)
-	#data = MerckChallengeDataset("ACT7_competition_training.csv")
-	#print(data.__len__())
-	#print(data.__getitem__(1))
-
+	data = MerckChallengeDataset("ACT7_competition_training.csv")
+	print(data.__len__())	
+	
+	x, y = getTestData("ACT7_competition_training.csv")
+	print(x.size())
+	print(y.size())
+	
