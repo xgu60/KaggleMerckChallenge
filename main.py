@@ -12,15 +12,18 @@ if __name__ == "__main__":
 
 	VISUAL_ON = True
 	GPU_IN_USE = True
-	EPOCH_NUM = 20
-	BATCH_SIZE = 256
+	EPOCH_NUM = 40
+	BATCH_SIZE = 64
+	filename = "ACT7_competition_training.csv"
+	FEATURES = 4505
+	OUTPUTS = 1
 
 
-	data = MerckChallengeDataset("ACT7_competition_training.csv")	
+	data = MerckChallengeDataset(filename)	
 	train_data = DataLoader(dataset=data, batch_size=BATCH_SIZE, shuffle=True, num_workers=2)
-	test_x_data, test_y_data = getTestData("ACT7_competition_training.csv")
+	test_x_data, test_y_data = getTestData(filename)
 
-	net = DNN(4505, 1)
+	net = DNN(FEATURES, OUTPUTS)
 	if (GPU_IN_USE): 
 		net.cuda()
 		test_data = Variable(test_x_data).cuda()
@@ -32,12 +35,14 @@ if __name__ == "__main__":
 	criterion = nn.MSELoss()
 	optimizer = optim.Adam(net.parameters(), lr=0.05, betas=(0.9, 0.99))
 
-	if VISUAL_ON:
-		start = 0
+	if VISUAL_ON:		
 		xdata = []
 		train = []
 		test = []
 		plt.ion()
+		plt.xlabel('epoch', fontsize=16)
+		plt.ylabel('R square', fontsize=16)
+		plt.grid(True)
 
 	for epoch in range(EPOCH_NUM):
 		for i, (inputs, labels) in enumerate(train_data):
@@ -53,19 +58,20 @@ if __name__ == "__main__":
 			loss.backward()
 			optimizer.step()
 
-			#evaluate the trained network
-			net.eval()
-			y_pred = net(inputs)
-			train_error = pearson_r_square(y_pred.data, labels.data)
+			
 
-			test_pred = net(test_data)
-			test_error = pearson_r_square(test_pred.data, test_label.data)
-			#print(EPOCH_NUM, i, r2)
+			if VISUAL_ON and i == 0:
+				#evaluate the trained network
+				net.eval()
+				y_pred = net(inputs)
+				train_error = pearson_r_square(y_pred.data, labels.data)
 
-			if VISUAL_ON:
+				test_pred = net(test_data)
+				test_error = pearson_r_square(test_pred.data, test_label.data)
+				#print(EPOCH_NUM, i, r2)
+
 				#update plot			
-				start += 1
-				xdata.append(start)
+				xdata.append(epoch)
 				train.append(train_error)
 				test.append(test_error)
 
@@ -76,6 +82,9 @@ if __name__ == "__main__":
 				plt.pause(0.001)
 
 	if VISUAL_ON:
+		plt.plot(xdata, train, 'b-', label='train')
+		plt.plot(xdata, test, 'r-', label='test')
+		plt.legend(loc='upper left', shadow=True)
 		plt.ioff()
 		plt.show()
 
